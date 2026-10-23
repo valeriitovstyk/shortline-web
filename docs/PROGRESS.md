@@ -21,7 +21,7 @@ are present.
 | `npm test` | PASS, 1 test |
 | `npm run golden` | PASS, empty iteration 1 set |
 | New C++ warnings | PASS, none in imported sources; SDL2 emits existing macOS deprecation warnings and the linker reports its duplicate SDL2 static library |
-| Pages deploy / live smoke | PENDING |
+| Pages deploy / live smoke | PASS, run `39947331728`; live HTTP 200, `d0c406b` visible, no browser console errors |
 
 The iteration 1 core intentionally still contains SDL and graphics as specified
 for the temporary original build. The no-SDL/no-graphics core check begins with

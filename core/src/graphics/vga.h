@@ -1,0 +1,96 @@
+#pragma once
+
+#include "color.h"
+
+#include <cstdint>
+
+namespace resl {
+
+// The original game used a screen resolution 640x480 (aspect ratio is ~1.8),
+// but the screen had the ratio 4:3 (~1.33).
+// This resulted in vertical scaling. We emulate this distortion to avoid
+// displaying a vertically shrunk image.
+
+inline static constexpr int LOGICAL_SCREEN_WIDTH = 640;
+inline static constexpr int LOGICAL_SCREEN_HEIGHT = 350;
+
+inline static constexpr int PHYSICAL_SCREEN_WIDTH = 640;
+inline static constexpr int PHYSICAL_SCREEN_HEIGHT = 480;
+
+// Convert a coordinate in the SDL logical viewport space (640x480, the space
+// in which SDL mouse/touch events arrive and in which the screen is rendered)
+// into the game logical space (640x350). The vertical component is scaled
+// down because the game content (640x350) is stretched vertically to 480 rows.
+inline constexpr int screenXToLogical(int x) noexcept
+{
+    return x * LOGICAL_SCREEN_WIDTH / PHYSICAL_SCREEN_WIDTH;
+}
+
+inline constexpr int screenYToLogical(int y) noexcept
+{
+    return y * LOGICAL_SCREEN_HEIGHT / PHYSICAL_SCREEN_HEIGHT;
+}
+
+} // namespace resl
+
+namespace resl::vga {
+
+enum WriteOperation {
+    Copy,
+    And,
+    Or,
+    Xor
+};
+
+using VideoMemPtr = unsigned;
+
+//-----------------------------------------------------------------------------
+
+/* 15ab:00fe */
+inline static constexpr unsigned VIDEO_MEM_ROW_BYTES = 0x5C;
+inline static constexpr VideoMemPtr VIDEO_MEM_START_ADDR = 0xA0000; /* A000:0000 */
+// entire page of the video memory A000:0000 - A000:FFFF
+inline static constexpr unsigned VIDEO_MEM_N_ROWS = 0x10000 / VIDEO_MEM_ROW_BYTES;
+
+//-----------------------------------------------------------------------------
+
+/* 1b06:026d */
+void setVideoModeR0W0();
+
+/* 1b06:0279 */
+void setVideoModeR0W1();
+
+/* 1b06:0285 */
+void setVideoModeR0W2();
+
+// The function in the original game receives an uint8 value here (VGA color code)
+/* 1b06:02ec */
+void setPaletteItem(Color, std::uint32_t rgb);
+
+/* Configures the data rotation register
+
+   bit 0-2  Number of positions to rotate data right before it is written to
+            display memory. Only active in Write Mode 0.
+       3-4  In Write Mode 2 this field controls the relation between the data
+            written from the CPU, the data latched from the previous read and the
+            data written to display memory:
+              0: CPU Data is written unmodified
+              1: CPU data is ANDed with the latched data
+              2: CPU data is ORed  with the latch data.
+              3: CPU data is XORed with the latched data. */
+/* 1b06:02a5 */
+void setDataRotation(std::uint8_t);
+
+/* 1b06:02b5 */
+void videoChoosePlanes(std::uint8_t);
+
+/* 1b06:03fa */
+void waitVerticalRetrace();
+
+/* 1b06:0408 */
+void waitForLine(std::int16_t line);
+
+/* 17a7:0106 */
+void waitForNRetraces(std::int16_t n);
+
+} // namespace resl::vga

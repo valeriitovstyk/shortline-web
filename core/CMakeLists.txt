@@ -318,7 +318,7 @@ else()
     target_compile_options(resl PRIVATE "-fno-exceptions" "-fno-rtti" "-Wextra" "-Wall")
 endif()
 
-target_include_directories(resl PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(resl PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 if (${USE_IWYU})
     find_program(iwyu_path NAMES include-what-you-use iwyu REQUIRED)

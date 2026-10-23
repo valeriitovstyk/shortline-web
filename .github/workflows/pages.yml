@@ -1,0 +1,43 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: mymindstorm/setup-emsdk@v14
+      - run: sudo apt-get update && sudo apt-get install -y cmake libsdl2-dev libsdl2-image-dev
+      - run: npm ci
+      - run: cmake -S . -B build-native -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_SDL2=ON && cmake --build build-native --parallel 4
+      - run: npm run typecheck && npm run lint && npm test && npm run golden
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
